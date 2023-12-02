@@ -39,7 +39,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(8), Answer::Number(0))
+        (Answer::Number(8), Answer::Number(2286))
     }
 
     fn init(input: &str) -> (Self, Data) {
