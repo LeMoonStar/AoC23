@@ -41,5 +41,9 @@ the `--release` option is not required, but it results in better performance.
 
 | Repository                                                                                           | Language                                |
 |------------------------------------------------------------------------------------------------------|-----------------------------------------|
-
-***This list is not complete yet, as the event has not started yet.***
+| [Trojaner's AdventofCode2023](https://github.com/TrojanerHD/AdventofCode2023)                        | TypeScript (Bun) (+ Rust)               |
+| [Niklas' Advent-of-Code-2023](https://github.com/derNiklaas/Advent-of-Code-2023)                     | Kotlin                                  |
+| [noeppi_noeppi's aoc](https://github.com/noeppi-noeppi/aoc/tree/master/2023)                         | Multiple                                |
+| [Seralius' AOC2023](https://github.com/Seralius/AOC2023)                                             | JavaScript                              |
+| [Daan Breur's AdventofCode](https://github.com/daanbreur/AdventofCode)                               | Rust                                    |
+| [Hax's](https://github.com/Schlauer-Hax/advent-of-code)                                              | TypeScript                              |
