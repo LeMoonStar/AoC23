@@ -3,8 +3,8 @@
 [![About](https://img.shields.io/badge/Advent%20of%20Code-2023-brightgreen?style=flat-square)](https://adventofcode.com/2023/about)
 [![Language: Rust](https://img.shields.io/badge/Language-Rust-orange.svg?style=flat-square)](https://en.wikipedia.org/wiki/Rust_(programming_language))
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://mit-license.org/)
-![Days completed](https://img.shields.io/badge/Days%20completed-1-red?style=flat-square)
-![Stars](https://img.shields.io/badge/Stars-2-yellow?style=flat-square)
+![Days completed](https://img.shields.io/badge/Days%20completed-2-red?style=flat-square)
+![Stars](https://img.shields.io/badge/Stars-4-yellow?style=flat-square)
 
 This is the third year in a row I (plan to) use rust to solve Advent of Code. But I must warn you: I haven't programmed a lot over the past year, so I am likely not in the best shape (School has been rough - I need a break) - expect the worst.
 
