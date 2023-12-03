@@ -89,26 +89,23 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
         let mut gears: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
 
         for number in &data.1 {
-            //let mut found = false;
             for y in 0.max(number.1 .1 as i64 - 1) as usize..data.0.len().min(number.1 .1 + 2) {
                 let line: &Vec<char> = &data.0[y];
-                for x in 0.max(number.1 .0 as i64 - 1) as usize
-                    ..line.len().min(number.1 .0 + number.1 .2 + 1)
+                for (x, c) in line
+                    .iter()
+                    .enumerate()
+                    .take(line.len().min(number.1 .0 + number.1 .2 + 1))
+                    .skip(0.max(number.1 .0 as i64 - 1) as usize)
                 {
-                    if line[x] == '*' {
+                    if *c == '*' {
                         if let Some(gear) = gears.get_mut(&(x, y)) {
                             gear.push(number.0);
                         } else {
                             let gear = vec![number.0];
                             gears.insert((x, y), gear);
                         }
-                        //found = true;
-                        //break;
                     }
                 }
-                //if found {
-                //    break;
-                //}
             }
         }
 
