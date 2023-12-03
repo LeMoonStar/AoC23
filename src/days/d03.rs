@@ -4,7 +4,7 @@ const CURRENT_DAY: u8 = 3;
 
 fn parse_map(map: &str) -> Data {
     let chars: Vec<Vec<char>> = map.lines().map(|v| v.chars().collect()).collect();
-    let mut parsed_numbers: Vec<(u32, (usize, usize,usize))> = vec!();
+    let mut parsed_numbers: Vec<(u32, (usize, usize, usize))> = vec![];
 
     for (y, line) in chars.iter().enumerate() {
         let mut current_number = 0;
@@ -35,11 +35,8 @@ fn parse_map(map: &str) -> Data {
         }
     }
 
-    (
-        chars,
-        parsed_numbers
-    )
-} 
+    (chars, parsed_numbers)
+}
 
 type Data = (Vec<Vec<char>>, Vec<(u32, (usize, usize, usize))>);
 impl DayImpl<Data> for Day<CURRENT_DAY> {
@@ -52,25 +49,20 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn init(input: &str) -> (Self, Data) {
-        (
-            Self {},
-            parse_map(input)
-        )
+        (Self {}, parse_map(input))
     }
 
     fn one(&self, data: &mut Data) -> Answer {
         let mut sum = 0;
 
-        //println!("{:?}", data);
-
         for number in &data.1 {
             let mut found = false;
-            //println!(" == checking: {:?} ==", number);
-            //println!("{} - {}", 0.max(number.1.1 as i64 -1), data.0.len().min(number.1.1+1));
-            for line in &data.0[0.max(number.1.1 as i64 -1) as usize .. data.0.len().min(number.1.1+2)] {
-                //println!("{} - {}", 0.max(number.1.0 as i64 -1) as usize, line.len().min(number.1.0+1));
-                for c in &line[0.max(number.1.0 as i64 -1) as usize ..line.len().min(number.1.0 + number.1.2 + 1)] {
-                    //println!("checking '{}'", c);
+            for line in
+                &data.0[0.max(number.1 .1 as i64 - 1) as usize..data.0.len().min(number.1 .1 + 2)]
+            {
+                for c in &line[0.max(number.1 .0 as i64 - 1) as usize
+                    ..line.len().min(number.1 .0 + number.1 .2 + 1)]
+                {
                     if !c.is_ascii_digit() && *c != '.' {
                         found = true;
                         break;
@@ -82,13 +74,11 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             }
 
             if found {
-                //println!("FOUND: {}", number.0);
                 sum += number.0;
                 continue;
             }
         }
 
-        // 506727 WRONG -> too low
         Answer::Number(sum as u64)
     }
 
