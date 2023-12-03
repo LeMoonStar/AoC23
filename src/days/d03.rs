@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::{Answer, Day, DayImpl};
 
 const CURRENT_DAY: u8 = 3;
@@ -45,7 +47,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(4361), Answer::Number(0))
+        (Answer::Number(4361), Answer::Number(467835))
     }
 
     fn init(input: &str) -> (Self, Data) {
@@ -83,6 +85,39 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        Answer::Number(data.1.len() as u64)
+        let mut sum = 0;
+        let mut gears: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
+
+        for number in &data.1 {
+            //let mut found = false;
+            for y in 0.max(number.1 .1 as i64 - 1) as usize..data.0.len().min(number.1 .1 + 2) {
+                let line: &Vec<char> = &data.0[y];
+                for x in 0.max(number.1 .0 as i64 - 1) as usize
+                    ..line.len().min(number.1 .0 + number.1 .2 + 1)
+                {
+                    if line[x] == '*' {
+                        if let Some(gear) = gears.get_mut(&(x, y)) {
+                            gear.push(number.0);
+                        } else {
+                            let gear = vec![number.0];
+                            gears.insert((x, y), gear);
+                        }
+                        //found = true;
+                        //break;
+                    }
+                }
+                //if found {
+                //    break;
+                //}
+            }
+        }
+
+        for gear in gears {
+            if gear.1.len() == 2 {
+                sum += gear.1[0] as u64 * gear.1[1] as u64;
+            }
+        }
+
+        Answer::Number(sum)
     }
 }
