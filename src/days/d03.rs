@@ -6,7 +6,7 @@ const CURRENT_DAY: u8 = 3;
 
 fn parse_map(map: &str) -> Data {
     let chars: Vec<Vec<char>> = map.lines().map(|v| v.chars().collect()).collect();
-    let mut parsed_numbers: Vec<(u32, (usize, usize, usize))> = vec![];
+    let mut parsed_numbers: Vec<Number> = vec![];
 
     for (y, line) in chars.iter().enumerate() {
         let mut current_number = 0;
@@ -25,7 +25,12 @@ fn parse_map(map: &str) -> Data {
 
                 len += 1;
             } else if let Some(start_x) = start_pos {
-                parsed_numbers.push((current_number, (start_x, y, len)));
+                parsed_numbers.push(Number {
+                    num: current_number,
+                    x: start_x,
+                    y,
+                    len,
+                });
                 current_number = 0;
                 start_pos = None;
                 len = 0;
@@ -33,14 +38,27 @@ fn parse_map(map: &str) -> Data {
         }
 
         if let Some(start_x) = start_pos {
-            parsed_numbers.push((current_number, (start_x, y, len)));
+            parsed_numbers.push(Number {
+                num: current_number,
+                x: start_x,
+                y,
+                len,
+            });
         }
     }
 
     (chars, parsed_numbers)
 }
 
-type Data = (Vec<Vec<char>>, Vec<(u32, (usize, usize, usize))>);
+#[derive(Debug, Clone)]
+pub struct Number {
+    num: u32,
+    x: usize,
+    y: usize,
+    len: usize,
+}
+
+type Data = (Vec<Vec<char>>, Vec<Number>);
 impl DayImpl<Data> for Day<CURRENT_DAY> {
     fn init_test() -> (Self, Data) {
         Self::init(include_str!("test_inputs/test03.txt"))
@@ -59,11 +77,10 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
 
         for number in &data.1 {
             let mut found = false;
-            for line in
-                &data.0[0.max(number.1 .1 as i64 - 1) as usize..data.0.len().min(number.1 .1 + 2)]
+            for line in &data.0[0.max(number.y as i64 - 1) as usize..data.0.len().min(number.y + 2)]
             {
-                for c in &line[0.max(number.1 .0 as i64 - 1) as usize
-                    ..line.len().min(number.1 .0 + number.1 .2 + 1)]
+                for c in &line
+                    [0.max(number.x as i64 - 1) as usize..line.len().min(number.x + number.len + 1)]
                 {
                     if !c.is_ascii_digit() && *c != '.' {
                         found = true;
@@ -76,7 +93,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             }
 
             if found {
-                sum += number.0;
+                sum += number.num;
                 continue;
             }
         }
@@ -89,19 +106,19 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
         let mut gears: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
 
         for number in &data.1 {
-            for y in 0.max(number.1 .1 as i64 - 1) as usize..data.0.len().min(number.1 .1 + 2) {
+            for y in 0.max(number.y as i64 - 1) as usize..data.0.len().min(number.y + 2) {
                 let line: &Vec<char> = &data.0[y];
                 for (x, c) in line
                     .iter()
                     .enumerate()
-                    .take(line.len().min(number.1 .0 + number.1 .2 + 1))
-                    .skip(0.max(number.1 .0 as i64 - 1) as usize)
+                    .take(line.len().min(number.x + number.len + 1))
+                    .skip(0.max(number.x as i64 - 1) as usize)
                 {
                     if *c == '*' {
                         if let Some(gear) = gears.get_mut(&(x, y)) {
-                            gear.push(number.0);
+                            gear.push(number.num);
                         } else {
-                            let gear = vec![number.0];
+                            let gear = vec![number.num];
                             gears.insert((x, y), gear);
                         }
                     }
