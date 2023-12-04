@@ -31,14 +31,22 @@ impl From<&str> for Card {
     }
 }
 
-fn traverse_card_tree(tree: &HashMap<usize, Vec<usize>>, id: usize) -> usize {
-    tree.get(&id).unwrap().len()
-        + tree
-            .get(&id)
-            .unwrap()
-            .iter()
-            .map(|i| traverse_card_tree(tree, *i))
-            .sum::<usize>()
+fn traverse_card_tree(tree: &mut HashMap<usize, (Vec<usize>, Option<usize>)>, id: usize) -> usize {
+    if let Some(cached) = tree.get(&id).unwrap().1 {
+        cached
+    } else {
+        let tmp = tree.get(&id).unwrap().0.len()
+            + tree
+                .get(&id)
+                .unwrap()
+                .clone()
+                .0
+                .iter()
+                .map(|i| traverse_card_tree(tree, *i))
+                .sum::<usize>();
+        tree.get_mut(&id).unwrap().1 = Some(tmp);
+        tmp
+    }
 }
 
 type Data = Vec<Card>;
@@ -75,7 +83,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
 
     fn two(&self, data: &mut Data) -> Answer {
         let mut i = 0;
-        let mut m: HashMap<usize, Vec<usize>> = HashMap::new();
+        let mut m: HashMap<usize, (Vec<usize>, Option<usize>)> = HashMap::new();
 
         loop {
             let mut wins = 0;
@@ -88,7 +96,10 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
 
             m.insert(
                 i,
-                (data[i].card_id as usize..(data[i].card_id as usize + wins)).collect(),
+                (
+                    (data[i].card_id as usize..(data[i].card_id as usize + wins)).collect(),
+                    None,
+                ),
             );
 
             i += 1;
@@ -99,7 +110,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
 
         let mut sum = data.len();
         for i in 0..data.len() {
-            sum += traverse_card_tree(&m, i);
+            sum += traverse_card_tree(&mut m, i);
         }
 
         Answer::Number(sum as u64)
