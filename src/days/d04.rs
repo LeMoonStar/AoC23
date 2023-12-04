@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::{Answer, Day, DayImpl};
 
 const CURRENT_DAY: u8 = 4;
@@ -27,6 +29,16 @@ impl From<&str> for Card {
                 .collect(),
         }
     }
+}
+
+fn traverse_card_tree(tree: &HashMap<usize, Vec<usize>>, id: usize) -> usize {
+    tree.get(&id).unwrap().len()
+        + tree
+            .get(&id)
+            .unwrap()
+            .iter()
+            .map(|i| traverse_card_tree(tree, *i))
+            .sum::<usize>()
 }
 
 type Data = Vec<Card>;
@@ -63,6 +75,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
 
     fn two(&self, data: &mut Data) -> Answer {
         let mut i = 0;
+        let mut m: HashMap<usize, Vec<usize>> = HashMap::new();
 
         loop {
             let mut wins = 0;
@@ -73,9 +86,10 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
                 }
             }
 
-            for j in data[i].card_id as usize..(data[i].card_id as usize + wins) {
-                data.push(data[j].clone());
-            }
+            m.insert(
+                i,
+                (data[i].card_id as usize..(data[i].card_id as usize + wins)).collect(),
+            );
 
             i += 1;
             if i >= data.len() {
@@ -83,6 +97,11 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             }
         }
 
-        Answer::Number(data.len() as u64)
+        let mut sum = data.len();
+        for i in 0..data.len() {
+            sum += traverse_card_tree(&m, i);
+        }
+
+        Answer::Number(sum as u64)
     }
 }
