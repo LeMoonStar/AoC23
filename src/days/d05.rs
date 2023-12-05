@@ -1,4 +1,5 @@
 use std::str::Lines;
+use std::thread::available_parallelism;
 use std::{
     sync::{Arc, Mutex},
     thread,
@@ -189,9 +190,21 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
 
         let mut thread_handles = Vec::with_capacity(seeds.len() / 2);
 
+        /*
+        !!! THIS ADDS A GIGANTIC MEMORY OVERHEAD AND ONLY SAVED A FEW SECONDS!!!
+        This was more intended as an experiment.
+        it's probably best to never run this
+        */
+
+        let mut jobs: Vec<u32> = Vec::new();
+
         while let Some(range_start) = iter.next() {
-            let local_range_start = *range_start;
-            let local_len = *iter.next().unwrap();
+            jobs.extend(*range_start..(range_start + *iter.next().unwrap()));
+        }
+
+        let num_threds = available_parallelism().unwrap().get();
+        for block in jobs.chunks(jobs.len() / num_threds) {
+            let local_block = block.to_owned();
             let local_data = data.clone();
 
             let shared_lowest = Arc::clone(&lowest);
@@ -199,7 +212,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             thread_handles.push(thread::spawn(move || {
                 let mut local_lowest = u32::MAX;
 
-                for seed in local_range_start..(local_range_start + local_len) {
+                for seed in local_block {
                     let location = local_data.seed_to_destination(seed);
                     local_lowest = local_lowest.min(location);
                 }
