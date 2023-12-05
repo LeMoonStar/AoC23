@@ -1,4 +1,8 @@
 use std::str::Lines;
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+};
 
 use super::{Answer, Day, DayImpl};
 
@@ -25,7 +29,7 @@ impl Range {
 pub struct Map(Vec<Range> /*, HashMap<u32, u32>*/);
 
 impl Map {
-    fn translate_value(&mut self, value: u32) -> u32 {
+    fn translate_value(&self, value: u32) -> u32 {
         /*if self.1.contains_key(&value) {
             println!("Cache hit!");     // => Never actually reported a Cache hit - instead my 32 GB of memory get completely filled. So Caching is irrelevant here.
             return *self.1.get(&value).unwrap();
@@ -79,7 +83,7 @@ pub struct Almanac {
 }
 
 impl Almanac {
-    fn seed_to_destination(&mut self, seed: u32) -> u32 {
+    fn seed_to_destination(&self, seed: u32) -> u32 {
         self.humidity_to_location.translate_value(
             self.temperature_to_humidity.translate_value(
                 self.light_to_temperature.translate_value(
@@ -178,19 +182,38 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        let mut lowest = u32::MAX;
+        let lowest = Arc::new(Mutex::new(u32::MAX));
 
         let seeds = data.seeds.clone();
         let mut iter = seeds.iter();
 
-        while let Some(range_start) = iter.next() {
-            let len = *iter.next().unwrap();
+        let mut thread_handles = Vec::with_capacity(seeds.len() / 2);
 
-            for seed in *range_start..(*range_start + len) {
-                lowest = lowest.min(data.seed_to_destination(seed));
-            }
+        while let Some(range_start) = iter.next() {
+            let local_range_start = *range_start;
+            let local_len = *iter.next().unwrap();
+            let local_data = data.clone();
+
+            let shared_lowest = Arc::clone(&lowest);
+
+            thread_handles.push(thread::spawn(move || {
+                let mut local_lowest = u32::MAX;
+
+                for seed in local_range_start..(local_range_start + local_len) {
+                    let location = local_data.seed_to_destination(seed);
+                    local_lowest = local_lowest.min(location);
+                }
+
+                let mut lowest = shared_lowest.lock().unwrap();
+                *lowest = lowest.min(local_lowest);
+            }))
         }
 
-        Answer::Number(lowest as u64)
+        for handle in thread_handles {
+            handle.join().unwrap();
+        }
+
+        let result = *lowest.lock().unwrap();
+        Answer::Number(result as u64)
     }
 }
