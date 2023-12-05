@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::Lines};
+use std::str::Lines;
 
 use super::{Answer, Day, DayImpl};
 
@@ -22,7 +22,7 @@ impl Range {
 }
 
 #[derive(Debug, Clone)]
-pub struct Map(Vec<Range>/*, HashMap<u32, u32>*/);
+pub struct Map(Vec<Range> /*, HashMap<u32, u32>*/);
 
 impl Map {
     fn translate_value(&mut self, value: u32) -> u32 {
@@ -62,7 +62,7 @@ impl Map {
 
         out.sort();
 
-        Self(out/*, HashMap::new()*/)
+        Self(out /*, HashMap::new()*/)
     }
 }
 
@@ -187,8 +187,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             let len = *iter.next().unwrap();
 
             for seed in *range_start..(*range_start + len) {
-                let x = lowest.min(data.seed_to_destination(seed));
-                lowest = lowest.min(x);
+                lowest = lowest.min(data.seed_to_destination(seed));
             }
         }
 
