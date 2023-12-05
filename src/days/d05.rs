@@ -16,47 +16,30 @@ impl Range {
         (self.source_start..(self.source_start + self.length)).contains(&value)
     }
 
-    fn contains_destination(&self, value: u32) -> bool {
-        (self.source_start..(self.source_start + self.length)).contains(&value)
-    }
-
     fn translate(&self, value: u32) -> u32 {
         value - self.source_start + self.destination_start
-    }
-
-    fn reverse(&self, value: u32) -> u32 {
-        value - self.destination_start + self.source_start
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Map(Vec<Range>, HashMap<u32, u32>);
+pub struct Map(Vec<Range>/*, HashMap<u32, u32>*/);
 
 impl Map {
     fn translate_value(&mut self, value: u32) -> u32 {
-        if self.1.contains_key(&value) {
+        /*if self.1.contains_key(&value) {
+            println!("Cache hit!");     // => Never actually reported a Cache hit - instead my 32 GB of memory get completely filled. So Caching is irrelevant here.
             return *self.1.get(&value).unwrap();
-        }
+        }*/
 
         for range in &self.0 {
             if range.contains_source(value) {
                 let translated = range.translate(value);
-                self.1.insert(value, translated);
+                //self.1.insert(value, translated);
                 return translated;
             }
         }
 
-        self.1.insert(value, value);
-        value
-    }
-
-    fn reverse_value(&self, value: u32) -> u32 {
-        for range in &self.0 {
-            if range.contains_destination(value) {
-                return range.reverse(value);
-            }
-        }
-
+        //self.1.insert(value, value);
         value
     }
 
@@ -79,7 +62,7 @@ impl Map {
 
         out.sort();
 
-        Self(out, HashMap::new())
+        Self(out/*, HashMap::new()*/)
     }
 }
 
@@ -177,7 +160,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(35), Answer::Number(0))
+        (Answer::Number(35), Answer::Number(46))
     }
 
     fn init(input: &str) -> (Self, Data) {
@@ -195,6 +178,20 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        Answer::Number(0)
+        let mut lowest = u32::MAX;
+
+        let seeds = data.seeds.clone();
+        let mut iter = seeds.iter();
+
+        while let Some(range_start) = iter.next() {
+            let len = *iter.next().unwrap();
+
+            for seed in *range_start..(*range_start + len) {
+                let x = lowest.min(data.seed_to_destination(seed));
+                lowest = lowest.min(x);
+            }
+        }
+
+        Answer::Number(lowest as u64)
     }
 }
