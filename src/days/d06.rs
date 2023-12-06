@@ -13,7 +13,7 @@ pub struct Race {
 }
 
 impl Race {
-    fn count_wins(&self) -> u64 {
+    fn calculate_wins(&self) -> u64 {
         let tmp = ((self.time as f64 / 2.0).powf(2.0) - self.record as f64).sqrt();
 
         let max = self.time as f64 / 2.0 + tmp;
@@ -22,6 +22,27 @@ impl Race {
         let res = max.ceil() - min.max(0.0).ceil() + if tmp % 1.0 == 0.0 { -1.0 } else { 0.0 };
 
         (res.floor() as i64).try_into().unwrap()
+    }
+
+    // For smaller ranges, the overhead of calculate_wins is bigger than the
+    // actual computation time of checking the entire range.
+    fn count_wins<R: RangeBounds<u64> + IntoIterator<Item = u64>>(
+        &self,
+        button_press_range: R,
+    ) -> u64 {
+        let mut wins = 0;
+
+        for button_press_time in button_press_range {
+            if self.check_race(button_press_time) {
+                wins += 1;
+            }
+        }
+
+        wins
+    }
+
+    fn check_race(&self, button_press_time: u64) -> bool {
+        (self.time - button_press_time) * button_press_time > self.record
     }
 }
 
@@ -66,7 +87,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn one(&self, data: &mut Data) -> Answer {
-        Answer::Number(data.iter().map(|v| v.count_wins()).product())
+        Answer::Number(data.iter().map(|v| v.count_wins(0..v.time)).product())
     }
 
     fn two(&self, data: &mut Data) -> Answer {
@@ -77,6 +98,6 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
                 time: race.time * 10_u64.pow((v.time as f64).log(10.0) as u32 + 1) + v.time,
             });
 
-        Answer::Number(race.count_wins())
+        Answer::Number(race.calculate_wins())
     }
 }
