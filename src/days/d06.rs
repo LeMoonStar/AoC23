@@ -7,56 +7,35 @@ use super::{Answer, Day, DayImpl};
 const CURRENT_DAY: u8 = 6;
 
 #[derive(Debug, Clone)]
-pub struct Race<T>
-where
-    T: PrimInt,
-{
-    time: T,
-    record: T,
+pub struct Race {
+    time: u64,
+    record: u64,
 }
 
-impl<T> Race<T>
-where
-    T: PrimInt,
-{
-    // This can be optimized by using maths - I intend on doing this soon,
-    // but I've been doing this day's task duwing my break at school and don't
-    // have enough time for this now.
-    fn check_race_range<R: RangeBounds<T> + IntoIterator<Item = T>>(
-        &self,
-        button_press_range: R,
-    ) -> u32 {
-        let mut wins = 0;
+impl Race {
+    fn count_wins(&self) -> u64 {
+        let tmp = ((self.time as f64 / 2.0).powf(2.0) - self.record as f64).sqrt();
 
-        for button_press_time in button_press_range {
-            if self.check_race(button_press_time) {
-                wins += 1;
-            }
-        }
+        let max = self.time as f64 / 2.0 + tmp;
+        let min = self.time as f64 / 2.0 - tmp;
 
-        wins
-    }
+        let res = max.ceil() - min.max(0.0).ceil() + if tmp % 1.0 == 0.0 { -1.0 } else { 0.0 };
 
-    fn check_race(&self, button_press_time: T) -> bool {
-        (self.time - button_press_time) * button_press_time > self.record
+        (res.floor() as i64).try_into().unwrap()
     }
 }
 
-impl<T> Race<T>
-where
-    T: PrimInt + FromStr,
-    <T as FromStr>::Err: std::fmt::Debug,
-{
+impl Race {
     fn parse_race_list(input: &str) -> Vec<Self> {
         let mut lines = input.lines();
-        let time_list: Vec<T> = lines
+        let time_list: Vec<u64> = lines
             .next()
             .unwrap()
             .split_whitespace()
             .skip(1)
             .map(|v| v.parse().unwrap())
             .collect();
-        let distance_list: Vec<T> = lines
+        let distance_list: Vec<u64> = lines
             .next()
             .unwrap()
             .split_whitespace()
@@ -72,7 +51,7 @@ where
     }
 }
 
-type Data = Vec<Race<u16>>;
+type Data = Vec<Race>;
 impl DayImpl<Data> for Day<CURRENT_DAY> {
     fn init_test() -> (Self, Data) {
         Self::init(include_str!("test_inputs/test06.txt"))
@@ -87,24 +66,17 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn one(&self, data: &mut Data) -> Answer {
-        let mut result = 1;
-
-        for race in data {
-            result *= race.check_race_range(1..race.time);
-        }
-
-        Answer::Number(result as u64)
+        Answer::Number(data.iter().map(|v| v.count_wins()).product())
     }
 
     fn two(&self, data: &mut Data) -> Answer {
         let race = data
             .iter()
-            .fold(Race::<u64> { record: 0, time: 0 }, |race, v| Race {
-                record: race.record * 10_u64.pow((v.record as f64).log(10.0) as u32 + 1)
-                    + v.record as u64,
-                time: race.time * 10_u64.pow((v.time as f64).log(10.0) as u32 + 1) + v.time as u64,
+            .fold(Race { record: 0, time: 0 }, |race, v| Race {
+                record: race.record * 10_u64.pow((v.record as f64).log(10.0) as u32 + 1) + v.record,
+                time: race.time * 10_u64.pow((v.time as f64).log(10.0) as u32 + 1) + v.time,
             });
 
-        Answer::Number(race.check_race_range(1..race.time) as u64)
+        Answer::Number(race.count_wins())
     }
 }
