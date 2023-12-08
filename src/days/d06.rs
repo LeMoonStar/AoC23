@@ -1,6 +1,4 @@
-use num_traits::int::PrimInt;
 use std::ops::RangeBounds;
-use std::str::FromStr;
 
 use super::{Answer, Day, DayImpl};
 

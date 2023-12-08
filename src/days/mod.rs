@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 
 pub struct Day<const DAY: u8>;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Answer {
     Number(u64),
