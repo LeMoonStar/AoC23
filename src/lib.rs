@@ -52,8 +52,21 @@ pub fn get_verbosity() -> Verbosity {
 #[macro_export]
 macro_rules! vprintln {
     ($($arg:tt)*) => {
-        if $crate::get_verbosity() ==  $crate::Verbosity::Verbose || $crate::get_verbosity() ==  $crate::Verbosity::Developement {
+        #[cfg(debug_assertions)]
+        if $crate::get_verbosity() ==  $crate::Verbosity::Verbose || $crate::get_verbosity() ==  $crate::Verbosity::Development {
             println!(
+                $($arg)*
+            )
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! vprint {
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        if $crate::get_verbosity() ==  $crate::Verbosity::Verbose || $crate::get_verbosity() ==  $crate::Verbosity::Development {
+            print!(
                 $($arg)*
             )
         }
@@ -63,7 +76,20 @@ macro_rules! vprintln {
 #[macro_export]
 macro_rules! dprintln {
     ($($arg:tt)*) => {
-        if $crate::get_verbosity() == $crate::Verbosity::Developement  {
+        #[cfg(debug_assertions)]
+        if $crate::get_verbosity() == $crate::Verbosity::Development  {
+            println!(
+                $($arg)*
+            )
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! dprint {
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        if $crate::get_verbosity() == $crate::Verbosity::Development  {
             println!(
                 $($arg)*
             )
