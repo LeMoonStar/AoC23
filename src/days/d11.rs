@@ -1,4 +1,4 @@
-use crate::{dprintln, vprint, vprintln};
+use crate::dprintln;
 
 use super::{Answer, Day, DayImpl};
 
