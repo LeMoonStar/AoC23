@@ -6,32 +6,32 @@ const CURRENT_DAY: u8 = 11;
 
 #[derive(Debug, Clone)]
 pub struct Map {
-    stars: Vec<(usize, usize)>,
-    dimensions: (usize, usize),
+    stars: Vec<(u64, u64)>,
+    dimensions: (u64, u64),
 }
 
 impl Map {
-    fn star_distance(&self, a: usize, b: usize) -> usize {
+    fn star_distance(&self, a: usize, b: usize) -> u64 {
         self.stars[a].0.abs_diff(self.stars[b].0) + self.stars[a].1.abs_diff(self.stars[b].1)
     }
 
-    fn expand(&mut self, factor: usize) {
+    fn expand(&mut self, factor: u64) {
         let (rows, cols) = self.get_empty_rows_and_cols();
         self.stars = self
             .stars
             .iter()
             .map(|star| {
                 (
-                    star.0 + cols.iter().filter(|v| **v < star.0).count() * factor,
-                    star.1 + rows.iter().filter(|v| **v < star.1).count() * factor,
+                    star.0 + cols.iter().filter(|v| (**v as u64) < star.0).count() as u64 * factor,
+                    star.1 + rows.iter().filter(|v| (**v as u64) < star.1).count() as u64 * factor,
                 )
             })
             .collect();
-        self.dimensions.1 += rows.len() * factor;
-        self.dimensions.0 += cols.len() * factor;
+        self.dimensions.1 += rows.len() as u64 * factor;
+        self.dimensions.0 += cols.len() as u64 * factor;
     }
 
-    fn get_empty_rows_and_cols(&self) -> (Vec<usize>, Vec<usize>) {
+    fn get_empty_rows_and_cols(&self) -> (Vec<u64>, Vec<u64>) {
         let (mut rows, mut cols) = (Vec::new(), Vec::new());
 
         for y in 0..self.dimensions.1 {
@@ -70,28 +70,28 @@ impl Map {
 
 impl From<&str> for Map {
     fn from(value: &str) -> Self {
-        let mut dimensions = (0, 0);
+        let mut dimensions = (0_u64, 0_u64);
 
         Self {
             stars: value
                 .lines()
                 .enumerate()
                 .inspect(|(y, _)| {
-                    if *y + 1 > dimensions.1 {
-                        dimensions.1 = *y + 1
+                    if (*y + 1) as u64 > dimensions.1 {
+                        dimensions.1 = (*y + 1) as u64
                     }
                 })
                 .flat_map(|(y, line)| {
                     line.chars()
                         .enumerate()
                         .inspect(|(x, _)| {
-                            if *x + 1 > dimensions.0 {
-                                dimensions.0 = *x + 1
+                            if (*x + 1) as u64 > dimensions.0 {
+                                dimensions.0 = (*x + 1) as u64
                             }
                         })
                         .fold(Vec::new(), |mut tmp, (x, c)| {
                             if c == '#' {
-                                tmp.push((x, y));
+                                tmp.push((x as u64, y as u64));
                             }
                             tmp
                         })
@@ -125,7 +125,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             }
         }
 
-        Answer::Number(sum as u64)
+        Answer::Number(sum)
     }
 
     fn two(&self, data: &mut Data) -> Answer {
@@ -140,6 +140,6 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             }
         }
 
-        Answer::Number(sum as u64)
+        Answer::Number(sum)
     }
 }
