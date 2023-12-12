@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::dprintln;
 
 use super::{Answer, Day, DayImpl};
@@ -29,74 +31,72 @@ pub struct Record {
 }
 
 impl Record {
-    pub fn find_possible_solutions(&self, springs: Option<&Vec<SpringState>>) -> u64 {
-        let springs = springs.unwrap_or(&self.springs);
+    pub fn unfold(&mut self) -> &mut Self {
+        self.springs.push(SpringState::Unknown);
+        self.springs = self.springs.repeat(5);
+        self.springs.pop();
 
-        for i in 0..springs.len() {
-            if springs[i] == SpringState::Unknown {
-                let mut a = springs.clone();
-                let mut b = springs.clone();
+        self.groups = self.groups.repeat(5);
 
-                a[i] = SpringState::Operational;
-                b[i] = SpringState::Damaged;
-
-                return self.find_possible_solutions(Some(&a))
-                    + self.find_possible_solutions(Some(&b));
-            }
-        }
-
-        if self.check_spring_groups(springs) {
-            1
-        } else {
-            0
-        }
+        self
     }
 
-    // HOLY F this is ugly... Way too tired today to re-write this in a nice way tho.
-    pub fn check_spring_groups(&self, springs: &Vec<SpringState>) -> bool {
-        let mut damaged = 0;
-        let mut group_num = 0;
+    pub fn find_possible_solutions(
+        &self,
+        pos: usize,
+        group_id: usize,
+        continuous_damaged: u8,
+        cache: &mut HashMap<(usize, usize, u8), u64>,
+    ) -> u64 {
+        if let Some(cached) = cache.get(&(pos, group_id, continuous_damaged)) {
+            dprintln!("Cache Hit!");
+            return *cached;
+        }
 
-        dprintln!("{:?} - {:?}", self.springs, self.groups);
-        dprintln!("{:?} - {:?}", springs, self.groups);
+        // Have we reached the end?
+        if pos >= self.springs.len() {
+            // Check whether the amount of finished groups is correct.
+            // We might still be in a group. If so, check if it is the correct size.
+            return if group_id == self.groups.len() && continuous_damaged == 0
+                || group_id == self.groups.len() - 1 && continuous_damaged == self.groups[group_id]
+            {
+                1
+            } else {
+                0
+            };
+        }
 
-        let mut springs = springs.clone();
-        springs.push(SpringState::Operational);
-
-        for spring in springs {
-            //dprintln!(" s: {:?}", spring);
-            if spring == SpringState::Damaged {
-                damaged += 1;
-            } else if damaged != 0 {
-                dprintln!("  Group of {} damaged", damaged);
-                if group_num >= self.groups.len() {
-                    dprintln!("    Too many groups: {} > {}", group_num, self.groups.len());
-                    return false;
-                } else {
-                    dprintln!("    Checking group: {}", group_num);
-                    dprintln!("      Expecting: {}", self.groups[group_num]);
-                    dprintln!("      Damaged: {}", damaged);
-                    if damaged == self.groups[group_num] {
-                        dprintln!("      => Valid.");
-                        damaged = 0;
-                        group_num += 1;
-                    } else {
-                        dprintln!("      => Failed.");
-                        return false;
-                    }
-                }
+        let res = (if self.springs[pos] == SpringState::Operational
+            || self.springs[pos] == SpringState::Unknown
+        {
+            if continuous_damaged == 0 {
+                // Operational -> Operational
+                self.find_possible_solutions(pos + 1, group_id, 0, cache)
+            } else if continuous_damaged > 0 && self.groups[group_id] == continuous_damaged {
+                // Damaged -> Operational | Group ended with correct size.
+                self.find_possible_solutions(pos + 1, group_id + 1, 0, cache)
+            } else {
+                // Damaged -> Operational | Group ended with wrong size. Terminate path
+                0
             }
-        }
-
-        dprintln!("  No invalid groups found. Checking group count.");
-        dprintln!("  Found: {} Expected: {}.", group_num, self.groups.len());
-        if group_num == self.groups.len() {
-            dprintln!("    => Passed.");
-            true
         } else {
-            dprintln!("    => Failed.");
-            false
-        }
+            0
+        } + if self.springs[pos] == SpringState::Damaged
+            || self.springs[pos] == SpringState::Unknown
+        {
+            if group_id < self.groups.len() && continuous_damaged < self.groups[group_id] {
+                // ANYTHING -> Damaged | There aren't too many groups and the current group isn't too big.
+                self.find_possible_solutions(pos + 1, group_id, continuous_damaged + 1, cache)
+            } else {
+                // ANYTHING -> Damaged | The current group is too big or there are too many.
+                0
+            }
+        } else {
+            0
+        });
+
+        cache.insert((pos, group_id, continuous_damaged), res);
+        res
     }
 }
 
@@ -118,7 +118,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(21), Answer::Number(0))
+        (Answer::Number(21), Answer::Number(525152))
     }
 
     fn init(input: &str) -> (Self, Data) {
@@ -126,11 +126,21 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn one(&self, data: &mut Data) -> Answer {
-        dprintln!("{:?}", data);
-        Answer::Number(data.iter().map(|v| v.find_possible_solutions(None)).sum())
+        Answer::Number(
+            data.iter()
+                .map(|v| v.find_possible_solutions(0, 0, 0, &mut HashMap::new()))
+                .sum(),
+        )
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        Answer::Number(data.len() as u64)
+        Answer::Number(
+            data.iter_mut()
+                .map(|v| {
+                    v.unfold()
+                        .find_possible_solutions(0, 0, 0, &mut HashMap::new())
+                })
+                .sum(),
+        )
     }
 }
