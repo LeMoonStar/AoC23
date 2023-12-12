@@ -46,11 +46,13 @@ impl Record {
         pos: usize,
         group_id: usize,
         continuous_damaged: u8,
-        cache: &mut HashMap<(usize, usize, u8), u64>,
+        cache: &mut Option<HashMap<(usize, usize, u8), u64>>,
     ) -> u64 {
-        if let Some(cached) = cache.get(&(pos, group_id, continuous_damaged)) {
-            dprintln!("Cache Hit!");
-            return *cached;
+        if let Some(cache) = cache {
+            if let Some(cached) = cache.get(&(pos, group_id, continuous_damaged)) {
+                dprintln!("Cache Hit!");
+                return *cached;
+            }
         }
 
         // Have we reached the end?
@@ -95,7 +97,9 @@ impl Record {
             0
         });
 
-        cache.insert((pos, group_id, continuous_damaged), res);
+        if let Some(cache) = cache {
+            cache.insert((pos, group_id, continuous_damaged), res);
+        }
         res
     }
 }
@@ -128,7 +132,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     fn one(&self, data: &mut Data) -> Answer {
         Answer::Number(
             data.iter()
-                .map(|v| v.find_possible_solutions(0, 0, 0, &mut HashMap::new()))
+                .map(|v| v.find_possible_solutions(0, 0, 0, &mut None))
                 .sum(),
         )
     }
@@ -138,7 +142,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             data.iter_mut()
                 .map(|v| {
                     v.unfold()
-                        .find_possible_solutions(0, 0, 0, &mut HashMap::new())
+                        .find_possible_solutions(0, 0, 0, &mut Some(HashMap::new()))
                 })
                 .sum(),
         )
