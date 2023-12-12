@@ -161,7 +161,7 @@ impl Map {
         let mut neighbours = Vec::with_capacity(4);
 
         dprintln!(
-            "  Considdered Dirs: {:?}",
+            "  Considered Dirs: {:?}",
             self.tiles[pos.1][pos.0].get_connecting_directions()
         );
 

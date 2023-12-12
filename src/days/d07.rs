@@ -114,7 +114,7 @@ impl Hand {
             2 => match (cards[0], cards[1]) {
                 (1, 4) => HandType::FourOfAKind,
                 (2, 3) => HandType::FullHouse,
-                _ => panic!("Inpossible Input"),
+                _ => panic!("Impossible Input"),
             },
             3 => match (cards[0], cards[1], cards[2]) {
                 (1, 1, 3) => HandType::ThreeOfAKind,
@@ -122,7 +122,7 @@ impl Hand {
                 _ => panic!("Impossible Input"),
             },
             4 => HandType::OnePair,
-            _ => panic!("Imposssible Input"),
+            _ => panic!("Impossible Input"),
         }
     }
 
@@ -170,7 +170,7 @@ impl Hand {
                 ((_, 1), (_, 1), (_, 1), (_, 2)) => HandType::OnePair,
                 _ => panic!("Impossible Input"),
             },
-            _ => panic!("Imposssible Input"),
+            _ => panic!("Impossible Input"),
         }
     }
 }

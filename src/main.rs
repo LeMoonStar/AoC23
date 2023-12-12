@@ -109,13 +109,13 @@ fn main() {
 
     if matches.args.contains_key("verbose") {
         #[cfg(not(debug_assertions))]
-        println!("{}", "verbosity and development prints are only avaliable in unoptimized builds (compiled without --release).".red().bold());
+        println!("{}", "verbosity and development prints are only available in unoptimized builds (compiled without --release).".red().bold());
         set_verbosity(Verbosity::Verbose);
     }
 
     if matches.args.contains_key("development") {
         #[cfg(not(debug_assertions))]
-        println!("{}", "verbosity and development prints are only avaliable in unoptimized builds (compiled without --release).".red().bold());
+        println!("{}", "verbosity and development prints are only available in unoptimized builds (compiled without --release).".red().bold());
         set_verbosity(Verbosity::Development);
     }
 

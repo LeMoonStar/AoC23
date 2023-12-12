@@ -121,10 +121,10 @@ where
     /// Compute part 1
     fn one(&self, data: &mut T) -> Answer;
 
-    /// Compue part 2
+    /// Compute part 2
     fn two(&self, data: &mut T) -> Answer;
 
-    /// Parse input and messure the time it took
+    /// Parse input and measure the time it took
     fn init_timed(input: &str) -> ((Self, T), Duration)
     where
         Self: Sized,
@@ -133,13 +133,13 @@ where
         (Self::init(input), s.elapsed())
     }
 
-    /// Compute part 1 and messure the time it took
+    /// Compute part 1 and measure the time it took
     fn one_timed(&self, data: &mut T) -> (Answer, Duration) {
         let s = Instant::now();
         (self.one(data), s.elapsed())
     }
 
-    /// Compute part 2 and messure the time it took
+    /// Compute part 2 and measure the time it took
     fn two_timed(&self, data: &mut T) -> (Answer, Duration) {
         let s = Instant::now();
         (self.two(data), s.elapsed())
@@ -192,7 +192,7 @@ where
         (two, init_t, two_t)
     }
 
-    /// Compute both parts, and messure the time each step took
+    /// Compute both parts, and measure the time each step took
     fn run_timed(input: &str) -> (Answer, Answer, Duration, Duration, Duration)
     where
         Self: Sized,

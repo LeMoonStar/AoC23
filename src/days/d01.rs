@@ -30,7 +30,7 @@ impl NumberType {
             (
                 Some(Self::Spelled(1)),
                 /*text.strip_prefix("one").unwrap()*/ &text[1..],
-            ) // Numbers can overlap... that took quite a while to figgure out.
+            ) // Numbers can overlap... that took quite a while to figure out.
         } else if text.starts_with("two") {
             (
                 Some(Self::Spelled(2)),

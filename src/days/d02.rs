@@ -17,8 +17,8 @@ impl From<&str> for Handful {
             blue: 0,
         };
 
-        for color_count in value.split(", ") {
-            let (num, colour) = color_count.split_once(' ').unwrap();
+        for colour_count in value.split(", ") {
+            let (num, colour) = colour_count.split_once(' ').unwrap();
             let num = num.parse::<u8>().unwrap();
             match colour {
                 "red" => out.red = num,
