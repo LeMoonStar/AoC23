@@ -134,12 +134,12 @@ fn main() {
             run_day(day, part, &input);
         }
         ("auto", c_matches) => {
-            let session: String = match c_matches {
+            let session: Option<String> = match c_matches {
                 Some(c_matches) => match c_matches.value_of("session") {
-                    Some(v) => v.to_owned(),
-                    None => env::var("AOC_SESSION").expect("Neither a session argument nor the AOC_SESSION environment variable were provided."),
+                    Some(v) => Some(v.to_owned()),
+                    None => env::var("AOC_SESSION").ok(),
                 },
-                None => env::var("AOC_SESSION").expect("Neither a session argument nor the AOC_SESSION environment variable were provided."),
+                None => env::var("AOC_SESSION").ok(),
             };
             let cache = if let Some(c_matches) = c_matches {
                 !c_matches.args.contains_key("no_cache")
@@ -147,7 +147,7 @@ fn main() {
                 true
             };
 
-            let input = get_auto_input(day, &session, cache);
+            let input = get_auto_input(day, session.as_ref(), cache);
             run_day(day, part, &input);
         }
         ("test", _) => {
@@ -214,33 +214,45 @@ fn download_input(day: u8, session: &String) -> Result<String, reqwest::Error> {
     response.text()
 }
 
-fn get_auto_input(day: u8, session: &String, cache: bool) -> String {
+fn get_auto_input(day: u8, session: Option<&String>, cache: bool) -> String {
     let cache_str = &format!("./.aoc23_cache/input{:02}.txt", day);
     let cache_path: &Path = Path::new(cache_str);
     match cache {
         true => match fs::read_to_string(cache_path) {
             Ok(input) => input,
-            Err(_) => match download_input(day, session) {
-                Ok(input) => {
-                    let _ = fs::create_dir(Path::new("./.aoc23_cache"));
-                    match fs::write(cache_path, &input) {
-                        Ok(_) => {}
-                        Err(err) => println!("Warning! couldn't save input cache!{:?}", err),
+            Err(_) => {
+                if let Some(session) = session {
+                    match download_input(day, session) {
+                        Ok(input) => {
+                            let _ = fs::create_dir(Path::new("./.aoc23_cache"));
+                            match fs::write(cache_path, &input) {
+                                Ok(_) => {}
+                                Err(err) => {
+                                    println!("Warning! couldn't save input cache!{:?}", err)
+                                }
+                            }
+                            input
+                        }
+                        Err(err) => {
+                            panic!("Error while downloading input: {:?}", err);
+                        }
                     }
-                    input
+                } else {
+                    panic!("Neither a session argument nor the AOC_SESSION environment variable were provided, and there is no cache of the day's input.");
                 }
-                Err(err) => {
-                    panic!("Error while downloading input: {:?}", err);
-                }
-            },
+            }
         },
         false => {
             let _ = fs::remove_file(cache_path);
-            match download_input(day, session) {
-                Ok(input) => input,
-                Err(err) => {
-                    panic!("Error while downloading input: {:?}", err);
+            if let Some(session) = session {
+                match download_input(day, session) {
+                    Ok(input) => input,
+                    Err(err) => {
+                        panic!("Error while downloading input: {:?}", err);
+                    }
                 }
+            } else {
+                panic!("Neither a session argument nor the AOC_SESSION environment variable were provided, and there is no cache of the day's input.");
             }
         }
     }
