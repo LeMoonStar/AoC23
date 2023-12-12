@@ -22,8 +22,8 @@ impl Map {
             .iter()
             .map(|star| {
                 (
-                    star.0 + cols.iter().filter(|v| (**v as u64) < star.0).count() as u64 * factor,
-                    star.1 + rows.iter().filter(|v| (**v as u64) < star.1).count() as u64 * factor,
+                    star.0 + cols.iter().filter(|v| **v < star.0).count() as u64 * factor,
+                    star.1 + rows.iter().filter(|v| **v < star.1).count() as u64 * factor,
                 )
             })
             .collect();
