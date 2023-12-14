@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
 use crate::{dprintln, vprintln};
 
 use super::{Answer, Day, DayImpl};
 
 const CURRENT_DAY: u8 = 14;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
     North,
     East,
@@ -12,7 +14,7 @@ pub enum Direction {
     West,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Tile {
     CubeRock,
     RoundRock,
@@ -184,7 +186,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(136), Answer::Number(0))
+        (Answer::Number(136), Answer::Number(64))
     }
 
     fn init(input: &str) -> (Self, Data) {
@@ -209,6 +211,28 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        Answer::Number(0)
+        let mut previous_by_map: HashMap<Vec<Vec<Tile>>, usize> = HashMap::new();
+        let mut previous_by_index: HashMap<usize, Vec<Vec<Tile>>> = HashMap::new();
+
+        for i in 0..1000000000 {
+            if let Some(prev_index) = previous_by_map.get(&data.tiles) {
+                let loop_length = i - prev_index;
+                if (1000000000 - i) % loop_length == 0 {
+                    return Answer::Number(data.get_load() as u64);
+                }
+            }
+
+            let beginning_map = data.tiles.clone();
+
+            data.slide_all(Direction::North, Tile::RoundRock);
+            data.slide_all(Direction::West, Tile::RoundRock);
+            data.slide_all(Direction::South, Tile::RoundRock);
+            data.slide_all(Direction::East, Tile::RoundRock);
+
+            previous_by_map.entry(beginning_map.clone()).or_insert(i);
+            previous_by_index.insert(i, beginning_map);
+        }
+
+        Answer::Number(data.get_load() as u64)
     }
 }
