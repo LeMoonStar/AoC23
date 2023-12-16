@@ -17,6 +17,7 @@ pub enum Mirror {
 }
 
 impl Mirror {
+    #[cfg(debug_assertions)]
     fn to_char(&self) -> char {
         match self {
             Self::Vertical => '|',
