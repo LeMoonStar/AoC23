@@ -64,3 +64,23 @@ where
         }
     }
 }
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Direction {
+    North,
+    East,
+    South,
+    West,
+}
+
+impl Direction {
+    pub fn opposite(&self) -> Direction {
+        match self {
+            Self::North => Self::South,
+            Self::South => Self::North,
+            Self::West => Self::East,
+            Self::East => Self::West,
+        }
+    }
+}

@@ -2,17 +2,9 @@ use std::collections::HashMap;
 
 use crate::{dprintln, vprintln};
 
-use super::{Answer, Day, DayImpl};
+use super::{utils::Direction, Answer, Day, DayImpl};
 
 const CURRENT_DAY: u8 = 14;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Tile {

@@ -1,17 +1,9 @@
 use crate::{dprintln, vprint, vprintln};
 use std::collections::HashMap;
 
-use super::{Answer, Day, DayImpl};
+use super::{Answer, Day, DayImpl, utils::Direction};
 
 const CURRENT_DAY: u8 = 10;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
 
 impl Direction {
     pub fn walk_pos(
@@ -48,15 +40,6 @@ impl Direction {
                     None
                 }
             }
-        }
-    }
-
-    pub fn opposite(&self) -> Direction {
-        match self {
-            Self::North => Self::South,
-            Self::South => Self::North,
-            Self::West => Self::East,
-            Self::East => Self::West,
         }
     }
 }
