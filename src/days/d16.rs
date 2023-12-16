@@ -45,26 +45,38 @@ type Data = Map<Mirror>;
 
 impl Data {
     // Yes, this function is necessary, as the energize function only handles fields coming after its starting pos.
-    fn start_energize(&self) -> HashSet<(usize, usize)> {
+    fn start_energize(&self, x: usize, y: usize, dir: Direction) -> HashSet<(usize, usize)> {
         let mut energized: HashSet<(usize, usize, Direction)> = HashSet::new();
 
-        match (self.get(0, 0).unwrap(), Direction::East) {
+        match (self.get(x, y).unwrap(), dir) {
             (Mirror::Horizontal, Direction::North | Direction::South) => {
-                self.energize(0, 0, Direction::East, &mut energized);
-                self.energize(0, 0, Direction::West, &mut energized);
+                self.energize(x, y, Direction::East, &mut energized);
+                self.energize(x, y, Direction::West, &mut energized);
             }
             (Mirror::Vertical, Direction::East | Direction::West) => {
-                self.energize(0, 0, Direction::North, &mut energized);
-                self.energize(0, 0, Direction::South, &mut energized);
+                self.energize(x, y, Direction::North, &mut energized);
+                self.energize(x, y, Direction::South, &mut energized);
             }
             (Mirror::DiagonalTopLeft, _) => {
-                self.energize(0, 0, Direction::South, &mut energized);
+                let dir = match dir {
+                    Direction::North => Direction::West,
+                    Direction::East => Direction::South,
+                    Direction::South => Direction::East,
+                    Direction::West => Direction::North,
+                };
+                self.energize(x, y, dir, &mut energized);
             }
             (Mirror::DiagonalTopRight, _) => {
-                self.energize(0, 0, Direction::North, &mut energized);
+                let dir = match dir {
+                    Direction::North => Direction::East,
+                    Direction::South => Direction::West,
+                    Direction::East => Direction::North,
+                    Direction::West => Direction::South,
+                };
+                self.energize(x, y, dir, &mut energized);
             }
             _ => {
-                self.energize(0, 0, Direction::East, &mut energized);
+                self.energize(x, y, dir, &mut energized);
             }
         }
 
@@ -198,7 +210,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn one(&self, data: &mut Data) -> Answer {
-        let energized = data.start_energize();
+        let energized = data.start_energize(0, 0, Direction::East);
 
         #[cfg(debug_assertions)]
         data.print(&energized);
@@ -213,6 +225,22 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        Answer::Number(0)
+        let mut max = 0;
+        for x in 0..data.dimensions().0 {
+            max = max.max(data.start_energize(x, 0, Direction::South).len());
+            max = max.max(
+                data.start_energize(x, data.dimensions().1 - 1, Direction::North)
+                    .len(),
+            );
+        }
+
+        for y in 1..data.dimensions().1 - 1 {
+            max = max.max(data.start_energize(0, y, Direction::East).len());
+            max = max.max(
+                data.start_energize(data.dimensions().0 - 1, y, Direction::West)
+                    .len(),
+            );
+        }
+        Answer::Number(max as u64)
     }
 }
