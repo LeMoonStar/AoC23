@@ -28,11 +28,14 @@ impl From<char> for Tile {
     }
 }
 
+/*
 #[derive(Debug, Clone)]
 pub struct Pattern {
     tiles: Vec<Vec<Tile>>,
     dimensions: (usize, usize),
-}
+}*/
+
+type Pattern = super::utils::Map<Tile>;
 
 impl Pattern {
     #[cfg(debug_assertions)]
@@ -46,7 +49,7 @@ impl Pattern {
                 vprint!(" ");
             }
 
-            for x in 0..self.dimensions.0 {
+            for x in 0..self.dimensions().0 {
                 if x == marker_x {
                     vprint!("v");
                 } else {
@@ -57,7 +60,7 @@ impl Pattern {
             vprintln!();
         }
 
-        for y in 0..self.dimensions.1 {
+        for y in 0..self.dimensions().1 {
             if let Some(marker_y) = marker.1 {
                 if y == marker_y {
                     vprint!(">");
@@ -66,10 +69,10 @@ impl Pattern {
                 }
             }
 
-            for x in 0..self.dimensions.0 {
+            for x in 0..self.dimensions().0 {
                 vprint!(
                     "{}",
-                    match self.tiles[y][x] {
+                    match self.get(x, y).unwrap() {
                         Tile::Ash => '.',
                         Tile::Rock => '#',
                     }
@@ -83,9 +86,9 @@ impl Pattern {
         dprintln!("{:?}", self);
 
         // check reflection on x-axis
-        for reflection_x in 1..self.dimensions.0 {
+        for reflection_x in 1..self.dimensions().0 {
             let mut is_reflection = true;
-            let width = reflection_x.min(self.dimensions.0 - reflection_x);
+            let width = reflection_x.min(self.dimensions().0 - reflection_x);
             // Width must not be 0.
             if width == 0 {
                 continue;
@@ -97,22 +100,22 @@ impl Pattern {
                 width
             );
 
-            for y in 0..self.dimensions.1 {
+            for y in 0..self.dimensions().1 {
                 for offset in 0..width {
-                    if reflection_x + offset >= self.dimensions.0 {
+                    if reflection_x + offset >= self.dimensions().0 {
                         continue;
                     }
                     dprintln!(
                         "  Comparing {:?} ({}, {}) - {:?} ({}, {})",
-                        self.tiles[y][reflection_x - offset - 1],
+                        self.get(reflection_x - offset - 1, y),
                         reflection_x - offset - 1,
                         y,
-                        self.tiles[y][reflection_x + offset],
+                        self.get(reflection_x + offset, y),
                         reflection_x + offset,
                         y,
                     );
-                    if self.tiles[y][reflection_x - offset - 1]
-                        != self.tiles[y][reflection_x + offset]
+                    if self.get(reflection_x - offset - 1, y)
+                        != self.get(reflection_x + offset, y)
                     {
                         dprintln!("    Not a reflection.");
                         is_reflection = false;
@@ -135,10 +138,10 @@ impl Pattern {
         }
 
         // check reflection on y-axis
-        for reflection_y in 0..self.dimensions.1 {
+        for reflection_y in 0..self.dimensions().1 {
             let mut is_reflection = true;
 
-            let width = reflection_y.min(self.dimensions.1 - reflection_y);
+            let width = reflection_y.min(self.dimensions().1 - reflection_y);
             // width must not be 0
             if width == 0 {
                 continue;
@@ -150,22 +153,22 @@ impl Pattern {
                 width
             );
 
-            for x in 0..self.dimensions.0 {
+            for x in 0..self.dimensions().0 {
                 for offset in 0..width {
-                    if reflection_y + offset >= self.dimensions.1 {
+                    if reflection_y + offset >= self.dimensions().1 {
                         continue;
                     }
                     dprintln!(
                         "  Comparing {:?} ({}, {}) - {:?} ({}, {})",
-                        self.tiles[reflection_y - offset - 1][x],
+                        self.get(x, reflection_y - offset - 1),
                         x,
                         reflection_y - offset - 1,
-                        self.tiles[reflection_y + offset][x],
+                        self.get(x, reflection_y + offset),
                         x,
                         reflection_y + offset
                     );
-                    if self.tiles[reflection_y - offset - 1][x]
-                        != self.tiles[reflection_y + offset][x]
+                    if self.get(x, reflection_y - offset - 1)
+                        != self.get(x, reflection_y + offset)
                     {
                         dprintln!("    Not a reflection.");
                         is_reflection = false;
@@ -198,9 +201,9 @@ impl Pattern {
         dprintln!("{:?}", self);
 
         // check reflection on x-axis
-        for reflection_x in 1..self.dimensions.0 {
+        for reflection_x in 1..self.dimensions().0 {
             let mut errors = 0;
-            let width = reflection_x.min(self.dimensions.0 - reflection_x);
+            let width = reflection_x.min(self.dimensions().0 - reflection_x);
             // Width must not be 0.
             if width == 0 {
                 continue;
@@ -212,22 +215,22 @@ impl Pattern {
                 width
             );
 
-            for y in 0..self.dimensions.1 {
+            for y in 0..self.dimensions().1 {
                 for offset in 0..width {
-                    if reflection_x + offset >= self.dimensions.0 {
+                    if reflection_x + offset >= self.dimensions().0 {
                         continue;
                     }
                     dprintln!(
                         "  Comparing {:?} ({}, {}) - {:?} ({}, {})",
-                        self.tiles[y][reflection_x - offset - 1],
+                        self.get(reflection_x - offset - 1, y),
                         reflection_x - offset - 1,
                         y,
-                        self.tiles[y][reflection_x + offset],
+                        self.get(reflection_x + offset, y),
                         reflection_x + offset,
                         y,
                     );
-                    if self.tiles[y][reflection_x - offset - 1]
-                        != self.tiles[y][reflection_x + offset]
+                    if self.get(reflection_x - offset - 1, y)
+                        != self.get(reflection_x + offset, y)
                     {
                         dprintln!("    Not a reflection.");
                         errors += 1;
@@ -246,10 +249,10 @@ impl Pattern {
         }
 
         // check reflection on y-axis
-        for reflection_y in 0..self.dimensions.1 {
+        for reflection_y in 0..self.dimensions().1 {
             let mut errors = 0;
 
-            let width = reflection_y.min(self.dimensions.1 - reflection_y);
+            let width = reflection_y.min(self.dimensions().1 - reflection_y);
             // width must not be 0
             if width == 0 {
                 continue;
@@ -261,22 +264,22 @@ impl Pattern {
                 width
             );
 
-            for x in 0..self.dimensions.0 {
+            for x in 0..self.dimensions().0 {
                 for offset in 0..width {
-                    if reflection_y + offset >= self.dimensions.1 {
+                    if reflection_y + offset >= self.dimensions().1 {
                         continue;
                     }
                     dprintln!(
                         "  Comparing {:?} ({}, {}) - {:?} ({}, {})",
-                        self.tiles[reflection_y - offset - 1][x],
+                        self.get(x, reflection_y - offset - 1),
                         x,
                         reflection_y - offset - 1,
-                        self.tiles[reflection_y + offset][x],
+                        self.get(x, reflection_y + offset),
                         x,
                         reflection_y + offset
                     );
-                    if self.tiles[reflection_y - offset - 1][x]
-                        != self.tiles[reflection_y + offset][x]
+                    if self.get(x, reflection_y - offset - 1)
+                        != self.get(x, reflection_y + offset)
                     {
                         dprintln!("    Not a reflection.");
                         errors += 1;
@@ -297,20 +300,6 @@ impl Pattern {
 
         panic!("Pattern without Reflection.");
         //None
-    }
-}
-
-impl From<&str> for Pattern {
-    fn from(value: &str) -> Self {
-        let tiles: Vec<Vec<Tile>> = value
-            .lines()
-            .map(|v| v.chars().map(|v| v.into()).collect())
-            .collect();
-
-        Self {
-            dimensions: (tiles[0].len(), tiles.len()),
-            tiles,
-        }
     }
 }
 

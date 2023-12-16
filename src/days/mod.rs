@@ -1,6 +1,8 @@
 use aoc_macro::mod_days;
 use std::time::{Duration, Instant};
 
+pub mod utils;
+
 // Thanks to andi-makes with his AoC project https://github.com/andi-makes/aoc2021,
 // this system is heavily inspired by his system.
 

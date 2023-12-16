@@ -123,6 +123,9 @@ impl From<char> for Tile {
     }
 }
 
+// Ain't using super::utils::Map here, as this one is different enough to be its
+// own type - otherwise I'd have to implement another type wrapping around
+// super::utils::Map to store the starting_pos, which is found during parsing.
 #[derive(Debug, Clone)]
 pub struct Map {
     tiles: Vec<Vec<Tile>>,

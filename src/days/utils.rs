@@ -1,0 +1,66 @@
+/// A general purpose struct able to store 2-Dimensional maps of Tiles.
+///
+/// Can be parsed from a multi-line &str, if the T type implements [`From<char>`](std::convert::From).
+#[derive(Debug, Clone, Hash)]
+pub struct Map<T> {
+    tiles: Vec<Vec<T>>,
+    dim: (usize, usize),
+}
+
+#[allow(dead_code)]
+impl<T> Map<T> {
+    /// Returns the dimensions of the map as a tuple `(x: usize, y: usize)`
+    pub fn dimensions(&self) -> (usize, usize) {
+        self.dim
+    }
+
+    /// Gets the tile of a specified position.
+    ///
+    /// May return None, if the position is outside the dimensions.
+    pub fn get(&self, x: usize, y: usize) -> Option<&T> {
+        self.tiles.get(y)?.get(x)
+    }
+
+    /// Sets the tile of a specified position.
+    pub fn set(&mut self, x: usize, y: usize, value: T) {
+        self.tiles[y][x] = value;
+    }
+
+    /// Get the internally stored tile data.
+    pub fn get_raw_tiles(&self) -> &Vec<Vec<T>> {
+        &self.tiles
+    }
+
+    /// Get the internally stored tile data as mutable reference.
+    pub fn get_raw_tiles_mut(&mut self) -> &mut Vec<Vec<T>> {
+        &mut self.tiles
+    }
+}
+
+impl<T> From<Vec<Vec<T>>> for Map<T> {
+    /// Creates a Map from a `Vec<Vec<T>>`.
+    /// The dimensions are derived from the length of the y-Axis and first x line.
+    fn from(value: Vec<Vec<T>>) -> Self {
+        Self {
+            dim: (value[0].len(), value.len()),
+            tiles: value,
+        }
+    }
+}
+
+impl<T> From<&str> for Map<T>
+where
+    T: From<char>,
+{
+    fn from(value: &str) -> Self {
+        let tiles: Vec<Vec<T>> = value
+            .lines()
+            .map(|v| v.chars().map(|v| v.into()).collect())
+            .collect();
+
+        Self {
+            dim: (tiles[0].len(), tiles.len()),
+            tiles,
+        }
+    }
+}
