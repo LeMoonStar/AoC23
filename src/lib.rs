@@ -150,7 +150,13 @@ pub fn run_day(day: u8, part: Part, input: &str) {
         println!("\t\tSolution: {}", format!("{}", one).bold().blue());
         println!(
             "\t\tTook:     {}",
-            dynamic_range_time_format(&one_t).bold().blue()
+            if cfg!(debug_assertions) {
+                (dynamic_range_time_format(&one_t) + " (DEBUG)")
+                    .bold()
+                    .red()
+            } else {
+                dynamic_range_time_format(&one_t).bold().blue()
+            }
         );
     }
     if part == Part::Both || part == Part::Two {
@@ -158,7 +164,13 @@ pub fn run_day(day: u8, part: Part, input: &str) {
         println!("\t\tSolution: {}", format!("{}", two).bold().blue());
         println!(
             "\t\tTook:     {}",
-            dynamic_range_time_format(&two_t).bold().blue()
+            if cfg!(debug_assertions) {
+                (dynamic_range_time_format(&two_t) + " (DEBUG)")
+                    .bold()
+                    .red()
+            } else {
+                dynamic_range_time_format(&two_t).bold().blue()
+            }
         );
     }
 }
