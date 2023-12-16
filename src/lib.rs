@@ -90,7 +90,7 @@ macro_rules! dprint {
     ($($arg:tt)*) => {
         #[cfg(debug_assertions)]
         if $crate::get_verbosity() == $crate::Verbosity::Development  {
-            println!(
+            print!(
                 $($arg)*
             )
         }
