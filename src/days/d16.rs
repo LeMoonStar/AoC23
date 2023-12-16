@@ -235,7 +235,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             );
         }
 
-        for y in 1..data.dimensions().1 - 1 {
+        for y in 0..data.dimensions().1 {
             max = max.max(data.start_energize(0, y, Direction::East).len());
             max = max.max(
                 data.start_energize(data.dimensions().0 - 1, y, Direction::West)
