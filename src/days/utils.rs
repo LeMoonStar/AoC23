@@ -83,4 +83,41 @@ impl Direction {
             Self::East => Self::West,
         }
     }
+
+    pub fn walk_pos(
+        &self,
+        pos: (usize, usize),
+        upper_limit: (usize, usize),
+    ) -> Option<(usize, usize)> {
+        match self {
+            Self::North => {
+                if pos.1 != 0 {
+                    Some((pos.0, pos.1 - 1))
+                } else {
+                    None
+                }
+            }
+            Self::South => {
+                if pos.1 < upper_limit.1 {
+                    Some((pos.0, pos.1 + 1))
+                } else {
+                    None
+                }
+            }
+            Self::West => {
+                if pos.0 != 0 {
+                    Some((pos.0 - 1, pos.1))
+                } else {
+                    None
+                }
+            }
+            Self::East => {
+                if pos.0 < upper_limit.0 {
+                    Some((pos.0 + 1, pos.1))
+                } else {
+                    None
+                }
+            }
+        }
+    }
 }
