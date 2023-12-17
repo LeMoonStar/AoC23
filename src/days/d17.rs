@@ -1,8 +1,6 @@
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{HashMap, HashSet};
 
-use colored::Colorize;
-
-use crate::{dprintln, vprint, vprintln};
+use crate::dprintln;
 
 use super::{
     utils::{Direction, Map},
@@ -167,8 +165,8 @@ impl Data {
 
     // Thank you, wikipedia (https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode)
     pub fn modified_a_star(&self, start: APos, goal: Pos) -> Option<Vec<APos>> {
-        let mut open_set: BinaryHeap<APos> = BinaryHeap::new();
-        open_set.push(start);
+        let mut open_set: HashSet<APos> = HashSet::new();
+        open_set.insert(start);
         let mut came_from: HashMap<APos, APos> = HashMap::new();
 
         let mut g_score: HashMap<APos, usize> = HashMap::new();
@@ -177,18 +175,21 @@ impl Data {
         let mut f_score: HashMap<APos, usize> = HashMap::new();
         f_score.insert(start, Self::distance((start.0, start.1), goal));
 
-        while let Some(current) = open_set.pop() {
-            /*let current = open_set
-            .iter()
-            .fold((usize::MAX, None), |min, pos| {
-                if min.1.is_none() || *f_score.get(pos).unwrap_or(&usize::MAX) < min.0 {
-                    (*f_score.get(pos).unwrap_or(&usize::MAX), Some(*pos))
-                } else {
-                    min
-                }
-            })
-            .1
-            .unwrap();*/
+        while !open_set.is_empty() {
+            //let Some(current) = open_set.pop() {
+            let current = open_set
+                .iter()
+                .fold((usize::MAX, None), |min, pos| {
+                    if min.1.is_none() || *f_score.get(pos).unwrap_or(&usize::MAX) < min.0 {
+                        (*f_score.get(pos).unwrap_or(&usize::MAX), Some(*pos))
+                    } else {
+                        min
+                    }
+                })
+                .1
+                .unwrap();
+
+            open_set.remove(&current);
 
             dprintln!("Current: {:?}", current);
 
@@ -207,7 +208,7 @@ impl Data {
                         neighbour,
                         tentative_g_score + Self::distance((neighbour.0, neighbour.1), goal),
                     );
-                    open_set.push(neighbour);
+                    open_set.insert(neighbour);
                 }
             }
         }
@@ -251,7 +252,11 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
             .unwrap();
         dprintln!("{:?}", path);
 
+        #[cfg(debug_assertions)]
         for y in 0..data.dimensions().1 {
+            use crate::{vprint, vprintln};
+            use colored::Colorize;
+
             for x in 0..data.dimensions().0 {
                 vprint!(
                     "{}",
