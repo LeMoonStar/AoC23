@@ -1,3 +1,8 @@
+// This is the ugliest solution to any day this year so far.
+// I didn't have the time to optimize this or make it particularly readable.
+// I should revisit this solution some day in the future.
+// However, today, I do not have the time.
+
 use std::collections::{HashMap, HashSet};
 
 use crate::dprintln;
@@ -57,7 +62,7 @@ impl Data {
         path
     }
 
-    fn get_neighbours(&self, pos: &APos) -> Vec<APos> {
+    fn get_neighbours_a(&self, pos: &APos) -> Vec<APos> {
         let mut neighbours: Vec<APos> = Vec::with_capacity(4);
         let upper_limit = (self.dimensions().0 - 1, self.dimensions().1 - 1);
 
@@ -163,8 +168,116 @@ impl Data {
         neighbours
     }
 
+    fn get_neighbours_b(&self, pos: &APos) -> Vec<APos> {
+        let mut neighbours: Vec<APos> = Vec::with_capacity(4);
+        let upper_limit = (self.dimensions().0 - 1, self.dimensions().1 - 1);
+
+        dprintln!("  pos {:?}", pos);
+
+        if pos.3 < 9 {
+            if let Some((x, y)) = pos.2.walk_pos((pos.0, pos.1), upper_limit) {
+                neighbours.push(APos(
+                    x,
+                    y,
+                    pos.2,
+                    pos.3 + 1,
+                    self.get(x, y).unwrap().heat_loss,
+                ));
+            }
+        }
+
+        if pos.3 > 2 {
+            // 90° turns
+            match pos.2 {
+                Direction::East => {
+                    if let Some((x, y)) = Direction::North.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::North,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                    if let Some((x, y)) = Direction::South.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::South,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                }
+                Direction::North => {
+                    if let Some((x, y)) = Direction::West.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::West,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                    if let Some((x, y)) = Direction::East.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::East,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                }
+                Direction::South => {
+                    if let Some((x, y)) = Direction::West.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::West,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                    if let Some((x, y)) = Direction::East.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::East,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                }
+                Direction::West => {
+                    if let Some((x, y)) = Direction::North.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::North,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                    if let Some((x, y)) = Direction::South.walk_pos((pos.0, pos.1), upper_limit) {
+                        neighbours.push(APos(
+                            x,
+                            y,
+                            Direction::South,
+                            0,
+                            self.get(x, y).unwrap().heat_loss,
+                        ));
+                    }
+                }
+            }
+        }
+
+        dprintln!("    => {:?}", neighbours);
+        neighbours
+    }
+
     // Thank you, wikipedia (https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode)
-    pub fn modified_a_star(&self, start: APos, goal: Pos) -> Option<Vec<APos>> {
+    pub fn modified_a_star_a(&self, start: APos, goal: Pos) -> Option<Vec<APos>> {
         let mut open_set: HashSet<APos> = HashSet::new();
         open_set.insert(start);
         let mut came_from: HashMap<APos, APos> = HashMap::new();
@@ -197,7 +310,59 @@ impl Data {
                 return Some(Self::reconstruct_path(came_from, current));
             }
 
-            for neighbour in self.get_neighbours(&current) {
+            for neighbour in self.get_neighbours_a(&current) {
+                let tentative_g_score = g_score.get(&current).unwrap_or(&usize::MAX)
+                    + self.get(neighbour.0, neighbour.1).unwrap().heat_loss as usize;
+
+                if tentative_g_score < *g_score.get(&neighbour).unwrap_or(&usize::MAX) {
+                    came_from.insert(neighbour, current);
+                    g_score.insert(neighbour, tentative_g_score);
+                    f_score.insert(
+                        neighbour,
+                        tentative_g_score + Self::distance((neighbour.0, neighbour.1), goal),
+                    );
+                    open_set.insert(neighbour);
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn modified_a_star_b(&self, start: APos, goal: Pos) -> Option<Vec<APos>> {
+        let mut open_set: HashSet<APos> = HashSet::new();
+        open_set.insert(start);
+        let mut came_from: HashMap<APos, APos> = HashMap::new();
+
+        let mut g_score: HashMap<APos, usize> = HashMap::new();
+        g_score.insert(start, 0);
+
+        let mut f_score: HashMap<APos, usize> = HashMap::new();
+        f_score.insert(start, Self::distance((start.0, start.1), goal));
+
+        while !open_set.is_empty() {
+            //let Some(current) = open_set.pop() {
+            let current = open_set
+                .iter()
+                .fold((usize::MAX, None), |min, pos| {
+                    if min.1.is_none() || *f_score.get(pos).unwrap_or(&usize::MAX) < min.0 {
+                        (*f_score.get(pos).unwrap_or(&usize::MAX), Some(*pos))
+                    } else {
+                        min
+                    }
+                })
+                .1
+                .unwrap();
+
+            open_set.remove(&current);
+
+            dprintln!("Current: {:?}", current);
+
+            if (current.0, current.1) == goal {
+                return Some(Self::reconstruct_path(came_from, current));
+            }
+
+            for neighbour in self.get_neighbours_b(&current) {
                 let tentative_g_score = g_score.get(&current).unwrap_or(&usize::MAX)
                     + self.get(neighbour.0, neighbour.1).unwrap().heat_loss as usize;
 
@@ -235,7 +400,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(102), Answer::Number(0))
+        (Answer::Number(102), Answer::Number(94))
     }
 
     fn init(input: &str) -> (Self, Data) {
@@ -245,7 +410,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     fn one(&self, data: &mut Data) -> Answer {
         dprintln!("{:?}", data);
         let path = data
-            .modified_a_star(
+            .modified_a_star_a(
                 APos(0, 0, Direction::East, 0, 0),
                 (data.dimensions().0 - 1, data.dimensions().1 - 1),
             )
@@ -277,7 +442,38 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
         }))
     }
 
-    fn two(&self, _data: &mut Data) -> Answer {
-        Answer::Number(0)
+    fn two(&self, data: &mut Data) -> Answer {
+        let path = data
+            .modified_a_star_b(
+                APos(0, 0, Direction::East, 0, 0),
+                (data.dimensions().0 - 1, data.dimensions().1 - 1),
+            )
+            .unwrap();
+        dprintln!("{:?}", path);
+
+        println!();
+        #[cfg(debug_assertions)]
+        for y in 0..data.dimensions().1 {
+            use crate::{vprint, vprintln};
+            use colored::Colorize;
+
+            for x in 0..data.dimensions().0 {
+                vprint!(
+                    "{}",
+                    if path.iter().any(|v| v.0 == x && v.1 == y) {
+                        format!("{}", data.get(x, y).unwrap().heat_loss)
+                            .green()
+                            .bold()
+                    } else {
+                        format!("{}", data.get(x, y).unwrap().heat_loss).red()
+                    }
+                )
+            }
+            vprintln!();
+        }
+
+        Answer::Number(path.iter().rev().skip(1).fold(0, |acc, pos| {
+            acc + data.get(pos.0, pos.1).unwrap().heat_loss as u64
+        }))
     }
 }
