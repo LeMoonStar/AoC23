@@ -3,7 +3,7 @@
 // I should revisit this solution some day in the future.
 // However, today, I do not have the time.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap};
 
 use crate::dprintln;
 
@@ -13,6 +13,33 @@ use super::{
 };
 
 const CURRENT_DAY: u8 = 17;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct WeightedData<T>
+where
+    T: Sized + PartialEq + Eq,
+{
+    weight: usize,
+    data: T,
+}
+
+impl<T> Ord for WeightedData<T>
+where
+    T: Sized + PartialEq + Eq,
+{
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.weight.cmp(&self.weight)
+    }
+}
+
+impl<T> PartialOrd for WeightedData<T>
+where
+    T: Sized + PartialEq + Eq,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Block {
@@ -278,8 +305,7 @@ impl Data {
 
     // Thank you, wikipedia (https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode)
     pub fn modified_a_star_a(&self, start: APos, goal: Pos) -> Option<Vec<APos>> {
-        let mut open_set: HashSet<APos> = HashSet::new();
-        open_set.insert(start);
+        let mut open_set: BinaryHeap<WeightedData<APos>> = BinaryHeap::new();
         let mut came_from: HashMap<APos, APos> = HashMap::new();
 
         let mut g_score: HashMap<APos, usize> = HashMap::new();
@@ -288,22 +314,13 @@ impl Data {
         let mut f_score: HashMap<APos, usize> = HashMap::new();
         f_score.insert(start, Self::distance((start.0, start.1), goal));
 
-        while !open_set.is_empty() {
-            //let Some(current) = open_set.pop() {
-            let current = open_set
-                .iter()
-                .fold((usize::MAX, None), |min, pos| {
-                    if min.1.is_none() || *f_score.get(pos).unwrap_or(&usize::MAX) < min.0 {
-                        (*f_score.get(pos).unwrap_or(&usize::MAX), Some(*pos))
-                    } else {
-                        min
-                    }
-                })
-                .1
-                .unwrap();
+        open_set.push(WeightedData {
+            data: start,
+            weight: *f_score.get(&start).unwrap_or(&usize::MAX),
+        });
 
-            open_set.remove(&current);
-
+        while let Some(current) = open_set.pop() {
+            let current = current.data;
             dprintln!("Current: {:?}", current);
 
             if (current.0, current.1) == goal {
@@ -321,7 +338,10 @@ impl Data {
                         neighbour,
                         tentative_g_score + Self::distance((neighbour.0, neighbour.1), goal),
                     );
-                    open_set.insert(neighbour);
+                    open_set.push(WeightedData {
+                        data: neighbour,
+                        weight: *f_score.get(&neighbour).unwrap_or(&usize::MAX),
+                    });
                 }
             }
         }
@@ -330,8 +350,7 @@ impl Data {
     }
 
     pub fn modified_a_star_b(&self, start: APos, goal: Pos) -> Option<Vec<APos>> {
-        let mut open_set: HashSet<APos> = HashSet::new();
-        open_set.insert(start);
+        let mut open_set: BinaryHeap<WeightedData<APos>> = BinaryHeap::new();
         let mut came_from: HashMap<APos, APos> = HashMap::new();
 
         let mut g_score: HashMap<APos, usize> = HashMap::new();
@@ -340,22 +359,13 @@ impl Data {
         let mut f_score: HashMap<APos, usize> = HashMap::new();
         f_score.insert(start, Self::distance((start.0, start.1), goal));
 
-        while !open_set.is_empty() {
-            //let Some(current) = open_set.pop() {
-            let current = open_set
-                .iter()
-                .fold((usize::MAX, None), |min, pos| {
-                    if min.1.is_none() || *f_score.get(pos).unwrap_or(&usize::MAX) < min.0 {
-                        (*f_score.get(pos).unwrap_or(&usize::MAX), Some(*pos))
-                    } else {
-                        min
-                    }
-                })
-                .1
-                .unwrap();
+        open_set.push(WeightedData {
+            data: start,
+            weight: *f_score.get(&start).unwrap_or(&usize::MAX),
+        });
 
-            open_set.remove(&current);
-
+        while let Some(current) = open_set.pop() {
+            let current = current.data;
             dprintln!("Current: {:?}", current);
 
             if (current.0, current.1) == goal {
@@ -373,7 +383,10 @@ impl Data {
                         neighbour,
                         tentative_g_score + Self::distance((neighbour.0, neighbour.1), goal),
                     );
-                    open_set.insert(neighbour);
+                    open_set.push(WeightedData {
+                        data: neighbour,
+                        weight: *f_score.get(&neighbour).unwrap_or(&usize::MAX),
+                    });
                 }
             }
         }
