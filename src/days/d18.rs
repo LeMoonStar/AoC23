@@ -1,9 +1,4 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    default,
-};
-
-use colored::{Colorize, CustomColor};
+use std::collections::{HashMap, VecDeque};
 
 use crate::{dprintln, vprint, vprintln};
 
@@ -14,8 +9,8 @@ const CURRENT_DAY: u8 = 18;
 #[derive(Debug, Clone)]
 pub struct Instruction {
     direction: Direction,
-    count: u8,
-    colour: u32, // I know, I know... One byte wasted... But this makes parsing so much easier!
+    count: usize,
+    colour_encoded: Option<(usize, Direction)>,
 }
 
 impl From<&str> for Instruction {
@@ -29,18 +24,34 @@ impl From<&str> for Instruction {
                 "L" => Direction::West,
                 _ => panic!(),
             },
-            count: split.next().unwrap().parse::<u8>().unwrap(),
-            colour: u32::from_str_radix(
-                split
-                    .next()
-                    .unwrap()
-                    .strip_prefix("(#")
-                    .unwrap()
-                    .strip_suffix(')')
-                    .unwrap(),
-                16,
-            )
-            .unwrap(),
+            count: split.next().unwrap().parse().unwrap(),
+            colour_encoded: Some((
+                usize::from_str_radix(
+                    split
+                        .clone()
+                        .peekable()
+                        .peek()
+                        .unwrap()
+                        .strip_prefix("(#")
+                        .unwrap()
+                        .strip_suffix(')')
+                        .unwrap()
+                        .strip_suffix([
+                            'A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7',
+                            '8', '9',
+                        ])
+                        .unwrap(),
+                    16,
+                )
+                .unwrap(),
+                match split.next().unwrap().chars().rev().nth(1).unwrap() {
+                    '0' => Direction::East,
+                    '1' => Direction::South,
+                    '2' => Direction::West,
+                    '3' => Direction::North,
+                    _ => panic!(),
+                },
+            )),
         }
     }
 }
@@ -48,7 +59,6 @@ impl From<&str> for Instruction {
 #[derive(Debug, Clone, Copy, Default)]
 struct Point {
     depth: u8,
-    colour: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -72,7 +82,6 @@ impl Map {
                     pos,
                     Point {
                         depth: point.depth + 1,
-                        colour: Some(instruction.colour),
                     },
                 );
                 self.max_pos = (self.max_pos.0.max(pos.0), self.max_pos.1.max(pos.1));
@@ -158,19 +167,8 @@ impl Map {
         vprintln!();
         for y in self.min_pos.1..self.max_pos.1 + 1 {
             for x in self.min_pos.0..self.max_pos.0 + 1 {
-                if let Some(point) = self.points.get(&(x, y)) {
-                    if let Some(colour) = point.colour {
-                        vprint!(
-                            "{}",
-                            "#".custom_color(CustomColor::new(
-                                (colour & 0x00FF0000 >> 16) as u8,
-                                (colour & 0x0000FF00 >> 8) as u8,
-                                (colour & 0x000000FF) as u8
-                            ))
-                        );
-                    } else {
-                        vprint!("#");
-                    }
+                if self.points.contains_key(&(x, y)) {
+                    vprint!("#");
                 } else {
                     vprint!(".");
                 }
@@ -191,7 +189,7 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn expected_results() -> (Answer, Answer) {
-        (Answer::Number(62), Answer::Number(0))
+        (Answer::Number(62), Answer::Number(952408144115))
     }
 
     fn init(input: &str) -> (Self, Data) {
@@ -211,6 +209,19 @@ impl DayImpl<Data> for Day<CURRENT_DAY> {
     }
 
     fn two(&self, data: &mut Data) -> Answer {
-        Answer::Number(data.len() as u64)
+        let new_instructions: Vec<Instruction> = data
+            .iter()
+            .map(|v| Instruction {
+                direction: v.colour_encoded.unwrap().1,
+                count: v.colour_encoded.unwrap().0,
+                colour_encoded: None,
+            })
+            .collect();
+
+        let mut map = Map::default();
+        map.execute_instructions(&new_instructions, (0, 0));
+        map.fill_surrounded();
+
+        Answer::Number(map.count_points() as u64)
     }
 }
