@@ -120,4 +120,42 @@ impl Direction {
             }
         }
     }
+
+    pub fn walk_pos_signed(
+        &self,
+        pos: (isize, isize),
+        lower_limit: (isize, isize),
+        upper_limit: (isize, isize),
+    ) -> Option<(isize, isize)> {
+        match self {
+            Self::North => {
+                if pos.1 > lower_limit.1 {
+                    Some((pos.0, pos.1 - 1))
+                } else {
+                    None
+                }
+            }
+            Self::South => {
+                if pos.1 < upper_limit.1 {
+                    Some((pos.0, pos.1 + 1))
+                } else {
+                    None
+                }
+            }
+            Self::West => {
+                if pos.0 > lower_limit.0 {
+                    Some((pos.0 - 1, pos.1))
+                } else {
+                    None
+                }
+            }
+            Self::East => {
+                if pos.0 < upper_limit.0 {
+                    Some((pos.0 + 1, pos.1))
+                } else {
+                    None
+                }
+            }
+        }
+    }
 }
